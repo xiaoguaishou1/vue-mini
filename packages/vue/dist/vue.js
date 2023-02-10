@@ -1,21 +1,25 @@
 var Vue = (function (exports) {
     'use strict';
 
-    /*
-     * @Author: 阿喜
-     * @Date: 2023-02-10 15:18:17
-     * @LastEditors: 阿喜
-     * @LastEditTime: 2023-02-10 16:35:51
-     * @FilePath: /vue3-mini-core/packages/reactivity/src/effect.ts
-     * @Description:
-     *
-     */
+    //绑定依赖与函数的关系
+    var targetMap = new WeakMap();
     /**
      * @description: 收集依赖 当依赖被触发时 需要根据依赖的key来获取
      * @return {*}
      */
     function track(target, key) {
-        console.log('收集依赖');
+        //如果当前没有正在执行的effect 则不需要收集依赖
+        if (!activeEffect)
+            return;
+        //获取当前target的依赖集合
+        var depsMap = targetMap.get(target);
+        //如果当前target没有依赖集合 则创建一个
+        if (!depsMap) {
+            targetMap.set(target, (depsMap = new Map()));
+        }
+        //为当前target的依赖集合添加依赖 设置回调函数
+        depsMap.set(key, activeEffect);
+        console.log('targetMap', targetMap);
     }
     /**
      * @description: 依赖触发
@@ -25,18 +29,43 @@ var Vue = (function (exports) {
      * @return {*}
      */
     function trigger(target, key, newValue) {
-        console.log('依赖触发');
+        var depsMap = targetMap.get(target);
+        if (!depsMap)
+            return;
+        //获取当前key的依赖集合
+        var effects = depsMap.get(key);
+        if (effects) {
+            //执行依赖集合中的所有依赖
+            effects.run();
+        }
     }
+    /**
+     * @description: 以ReactEffect实例为单位执行fn
+     * @param {function} fn
+     * @return {*}
+     */
     function effect(fn) {
+        //生成ReactEffect实例
         var _effect = new ReactiveEffect(fn);
+        //执行run方法
         _effect.run();
     }
+    // 保存当前正在执行的effect
+    var activeEffect;
+    /**
+     * @description: 响应性触发依赖时的执行类
+     * @param {*} any
+     * @return {*}
+     */
     var ReactiveEffect = /** @class */ (function () {
         function ReactiveEffect(fn) {
             this.fn = fn;
             this.fn = fn;
         }
         ReactiveEffect.prototype.run = function () {
+            // 保存当前正在执行的effect
+            activeEffect = this;
+            // 执行fn
             return this.fn();
         };
         return ReactiveEffect;
@@ -66,7 +95,7 @@ var Vue = (function (exports) {
             //利用Reflect.get方法获取值
             var res = Reflect.get(target, key, receiver);
             //收集依赖
-            track();
+            track(target, key);
             return res;
         };
     }
@@ -75,7 +104,7 @@ var Vue = (function (exports) {
             //使用Reflect.set方法设置值
             var res = Reflect.set(target, key, value, receiver);
             //触发依赖
-            trigger();
+            trigger(target, key);
             return res;
         };
     }

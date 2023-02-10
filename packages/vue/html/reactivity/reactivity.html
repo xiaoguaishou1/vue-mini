@@ -10,22 +10,20 @@
 </head>
 
 <body>
-    <div id="app">
-
-    </div>
+    <div id="app"></div>
     <script>
         const { reactive, effect } = Vue;
         const obj = reactive({
-            name: "张三",
+            name: 'tom'
         })
 
         effect(() => {
             document.querySelector("#app").innerHTML = obj.name;
         })
 
-        console.log(obj.name);
-
-        obj.name = "李四";
+        setTimeout(() => {
+            obj.name = "jhon";
+        }, 2000);
     </script>
 </body>
 
