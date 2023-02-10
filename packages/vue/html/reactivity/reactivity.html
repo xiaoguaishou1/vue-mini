@@ -1,3 +1,12 @@
+<!--
+ * @Author: 阿喜
+ * @Date: 2023-02-10 14:25:06
+ * @LastEditors: 阿喜
+ * @LastEditTime: 2023-02-10 15:23:32
+ * @FilePath: /vue3-mini-core/packages/vue/html/reactivity/reactivity.html
+ * @Description: 
+ * 
+-->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -13,9 +22,11 @@
     <script>
         const { reactive } = Vue;
         const obj = reactive({
-            name: "John",
+            name: "张三",
         })
-        console.log(obj);
+        console.log(obj.name);
+
+        obj.name = "李四";
     </script>
 </body>
 
