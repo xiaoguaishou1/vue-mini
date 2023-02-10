@@ -1,10 +1,16 @@
+/*
+ * @Author: 阿喜
+ * @Date: 2023-02-06 21:03:48
+ * @LastEditors: 阿喜
+ * @LastEditTime: 2023-02-10 15:41:56
+ * @FilePath: /vue3-mini-core/rollup.config.js
+ * @Description: 
+ * 
+ */
 import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import typescript from '@rollup/plugin-typescript'
 
-/**
- * 默认导出一个数组，数组的每一个对象都是一个单独的导出文件配置，详细可查：https://www.rollupjs.com/guide/big-list-of-options
- */
 export default [
     {
         // 入口文件
