@@ -1,3 +1,5 @@
+import { Dep } from "./dep";
+
 /*
  * @Author: 阿喜
  * @Date: 2023-02-10 15:18:17
@@ -7,7 +9,7 @@
  * @Description: 
  * 
  */
-type KeyToDepMap = Map<any, ReactiveEffect>
+type KeyToDepMap = Map<any, Dep>
 //绑定依赖与函数的关系
 const targetMap = new WeakMap<any, KeyToDepMap>();
 
@@ -24,9 +26,15 @@ export function track(target: object, key: unknown): any {
     if (!depsMap) {
         targetMap.set(target, (depsMap = new Map()))
     }
-    //为当前target的依赖集合添加依赖 设置回调函数
-    depsMap.set(key, activeEffect)
-    console.log('targetMap', targetMap)
+
+    let dep = depsMap.get(key);
+    //如果当前key没有依赖集合 则创建一个
+    if (!dep) {
+        depsMap.set(key, (dep = new Set()))
+    }
+
+    //添加依赖
+    dep.add(activeEffect)
 }
 
 /**
@@ -40,11 +48,12 @@ export function trigger(target: object, key: unknown, newValue: unknown): any {
     const depsMap = targetMap.get(target);
     if (!depsMap) return;
     //获取当前key的依赖集合
-    const effects = depsMap.get(key) as ReactiveEffect;
-    if (effects) {
-        //执行依赖集合中的所有依赖
-        effects.run()
-    }
+    const dep: Dep | undefined = depsMap.get(key);
+    if (!dep) return;
+    //遍历依赖集合 执行依赖
+    dep.forEach(effect => {
+        effect.run()
+    })
 }
 
 

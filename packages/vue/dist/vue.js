@@ -17,9 +17,13 @@ var Vue = (function (exports) {
         if (!depsMap) {
             targetMap.set(target, (depsMap = new Map()));
         }
-        //为当前target的依赖集合添加依赖 设置回调函数
-        depsMap.set(key, activeEffect);
-        console.log('targetMap', targetMap);
+        var dep = depsMap.get(key);
+        //如果当前key没有依赖集合 则创建一个
+        if (!dep) {
+            depsMap.set(key, (dep = new Set()));
+        }
+        //添加依赖
+        dep.add(activeEffect);
     }
     /**
      * @description: 依赖触发
@@ -33,11 +37,13 @@ var Vue = (function (exports) {
         if (!depsMap)
             return;
         //获取当前key的依赖集合
-        var effects = depsMap.get(key);
-        if (effects) {
-            //执行依赖集合中的所有依赖
-            effects.run();
-        }
+        var dep = depsMap.get(key);
+        if (!dep)
+            return;
+        //遍历依赖集合 执行依赖
+        dep.forEach(function (effect) {
+            effect.run();
+        });
     }
     /**
      * @description: 以ReactEffect实例为单位执行fn
