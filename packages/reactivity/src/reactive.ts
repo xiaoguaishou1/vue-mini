@@ -2,11 +2,12 @@
  * @Author: 阿喜
  * @Date: 2023-02-10 14:10:08
  * @LastEditors: 阿喜
- * @LastEditTime: 2023-02-10 14:43:58
- * @FilePath: /vue3-mini-core/packages/reactivity/src/reactive.ts
+ * @LastEditTime: 2023-02-10 23:22:43
+ * @FilePath: \vue3-core\packages\reactivity\src\reactive.ts
  * @Description:  构建响应式对象 reactive
  * Map和WeakMap的区别 来源csdn:https://blog.csdn.net/qq_26834399/article/details/105071907
  */
+import { isObject } from '@vue/shared';
 import { mutableHandlers } from './baseHandlers'
 /**
  * @description: 使用 WeakMap 保存响应式对象
@@ -54,3 +55,7 @@ function createReactiveObject(target: object, baseHandler: ProxyHandler<any>, pr
     return proxy;
 }
 
+
+
+export const toReactive = <T extends unknown>(value: T): T =>
+    isObject(value) ? reactive(value as object) : value

@@ -1,90 +1,116 @@
-import { Dep } from "./dep";
-
 /*
  * @Author: 阿喜
- * @Date: 2023-02-10 15:18:17
+ * @Date: 2023-02-10 22:19:55
  * @LastEditors: 阿喜
- * @LastEditTime: 2023-02-10 17:57:23
- * @FilePath: /vue3-mini-core/packages/reactivity/src/effect.ts
+ * @LastEditTime: 2023-02-13 19:55:37
+ * @FilePath: \vue3-core\packages\reactivity\src\effect.ts
  * @Description: 
  * 
  */
-type KeyToDepMap = Map<any, Dep>
-//绑定依赖与函数的关系
-const targetMap = new WeakMap<any, KeyToDepMap>();
+import { extend, isArray } from '@vue/shared'
+import { ComputedRefImpl } from './computed'
+import { createDep, Dep } from './dep'
 
-/**
- * @description: 收集依赖 当依赖被触发时 需要根据依赖的key来获取
- * @return {*}
- */
-export function track(target: object, key: unknown): any {
-    //如果当前没有正在执行的effect 则不需要收集依赖
-    if (!activeEffect) return;
-    //获取当前target的依赖集合
-    let depsMap = targetMap.get(target);
-    //如果当前target没有依赖集合 则创建一个
+export type EffectScheduler = (...args: any[]) => any
+
+type KeyToDepMap = Map<any, Dep>
+const targetMap = new WeakMap<any, KeyToDepMap>()
+
+export function track(target: object, key: unknown) {
+    // 如果当前不存在执行函数，则直接 return
+    if (!activeEffect) return
+    // 尝试从 targetMap 中，根据 target 获取 map
+    let depsMap = targetMap.get(target)
+    // 如果 map 不存在，则生成新的 map，并把该对象赋值给对应的 value
     if (!depsMap) {
         targetMap.set(target, (depsMap = new Map()))
     }
-
-    let dep = depsMap.get(key);
-    //如果当前key没有依赖集合 则创建一个
+    // 获取指定 key 的 dep
+    let dep = depsMap.get(key)
+    // 如果 dep 不存在，则生成新的 dep，并把该对象赋值给对应的 value
     if (!dep) {
-        depsMap.set(key, (dep = new Set()))
+        depsMap.set(key, (dep = createDep()))
     }
 
-    //添加依赖
-    dep.add(activeEffect)
+    trackEffects(dep)
+}
+export function trackEffects(dep: Dep) {
+    // activeEffect
+    dep.add(activeEffect!)
 }
 
-/**
- * @description: 依赖触发
- * @param {*} target 代理对象的key 当依赖被触发时 需要根据依赖的key来获取
- * @param {*} newValue 指定key的最新值
- * @param {*} oldValue 指定key的旧值
- * @return {*}
- */
-export function trigger(target: object, key: unknown, newValue: unknown): any {
-    const depsMap = targetMap.get(target);
-    if (!depsMap) return;
-    //获取当前key的依赖集合
-    const dep: Dep | undefined = depsMap.get(key);
-    if (!dep) return;
-    //遍历依赖集合 执行依赖
-    dep.forEach(effect => {
+
+export function trigger(target: object, key?: unknown) {
+    // 获取 target 对应的 map
+    const depsMap = targetMap.get(target)
+    // 如果 map 不存在，则直接 return
+    if (!depsMap) {
+        return
+    }
+    // 如果 key 不存在，则遍历 map，触发所有的 effect
+    let dep: Dep | undefined = depsMap.get(key)
+    if (!dep) {
+        return
+    }
+    triggerEffects(dep)
+}
+
+//以此触发依赖
+export function triggerEffects(dep: Dep) {
+    const effects = isArray(dep) ? dep : [...dep]
+    for (const effect of effects) {
+        if (effect.computed) {
+            triggerEffect(effect)
+        }
+    }
+    for (const effect of effects) {
+        if (!effect.computed) {
+            triggerEffect(effect)
+        }
+    }
+}
+
+//触发 effect
+export function triggerEffect(effect: ReactiveEffect) {
+    if (effect.scheduler) {
+        effect.scheduler()
+    } else {
         effect.run()
-    })
-}
-
-
-/**
- * @description: 以ReactEffect实例为单位执行fn
- * @param {function} fn
- * @return {*}
- */
-export function effect<T = any>(fn: () => T): void {
-    //生成ReactEffect实例
-    const _effect = new ReactiveEffect(fn);
-    //执行run方法
-    _effect.run()
-}
-
-// 保存当前正在执行的effect
-export let activeEffect: ReactiveEffect | undefined;
-
-/**
- * @description: 响应性触发依赖时的执行类
- * @param {*} any
- * @return {*}
- */
-export class ReactiveEffect<T = any> {
-    constructor(public fn: () => T) {
-        this.fn = fn
     }
+}
+
+//当前的 effect
+
+export let activeEffect: ReactiveEffect | undefined
+export class ReactiveEffect<T = any> {
+    computed?: ComputedRefImpl<T>
+    constructor(
+        public fn: () => T,
+        public scheduler: EffectScheduler | null = null
+    ) { }
+
     run() {
-        // 保存当前正在执行的effect
-        activeEffect = this;
-        // 执行fn
+        activeEffect = this
         return this.fn()
+    }
+
+    stop() { }
+}
+
+export interface ReactiveEffectOptions {
+    lazy?: boolean
+    scheduler?: EffectScheduler
+}
+
+
+export function effect<T = any>(fn: () => T, options?: ReactiveEffectOptions) {
+    // 生成 ReactiveEffect 
+    const _effect = new ReactiveEffect(fn)
+    if (options) {
+        extend(_effect, options)
+    }
+
+    if (!options || !options.lazy) {
+        _effect.run()
     }
 }

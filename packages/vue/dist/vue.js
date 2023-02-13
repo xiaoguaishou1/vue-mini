@@ -17,8 +17,8 @@ var Vue = (function (exports) {
         if (!depsMap) {
             targetMap.set(target, (depsMap = new Map()));
         }
+        //获取当前key的依赖集合
         var dep = depsMap.get(key);
-        //如果当前key没有依赖集合 则创建一个
         if (!dep) {
             depsMap.set(key, (dep = new Set()));
         }
@@ -119,8 +119,8 @@ var Vue = (function (exports) {
      * @Author: 阿喜
      * @Date: 2023-02-10 14:10:08
      * @LastEditors: 阿喜
-     * @LastEditTime: 2023-02-10 14:43:58
-     * @FilePath: /vue3-mini-core/packages/reactivity/src/reactive.ts
+     * @LastEditTime: 2023-02-10 23:22:43
+     * @FilePath: \vue3-core\packages\reactivity\src\reactive.ts
      * @Description:  构建响应式对象 reactive
      * Map和WeakMap的区别 来源csdn:https://blog.csdn.net/qq_26834399/article/details/105071907
      */
