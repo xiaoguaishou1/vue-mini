@@ -1,5 +1,4 @@
 # vue3-mini-core  Based on version 3.3.27 
-# 代码有所精简 基于vue3.3.27版本
 Handwritten Vue3 Core Module
 1.compiler-core
 2.compiler-dom
