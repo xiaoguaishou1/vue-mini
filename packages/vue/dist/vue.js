@@ -1,11 +1,72 @@
 var Vue = (function (exports) {
     'use strict';
 
-    function track(target, key) {
-        console.log('依赖收集');
+    // 当前正在运行的响应式副作用函数
+    var activeEffect;
+    var targetMap = new WeakMap();
+    /**
+     * 创建一个响应式副作用函数
+     * @param fn - 副作用函数
+     * @param options - 副作用函数选项
+     */
+    function effect(fn, options) {
+        var _effect = new ReactiveEffect(fn, options);
+        _effect.run();
     }
+    /**
+     * 响应式副作用函数类
+     * @param fn - 副作用函数
+     * @param options - 副作用函数选项
+     */
+    var ReactiveEffect = /** @class */ (function () {
+        function ReactiveEffect(fn, options) {
+            this.fn = fn;
+            this.options = options;
+            this.fn = fn;
+            this.options = options;
+        }
+        /**
+         * 运行响应式副作用函数
+         */
+        ReactiveEffect.prototype.run = function () {
+            activeEffect = this;
+            this.fn();
+        };
+        return ReactiveEffect;
+    }());
+    /**
+     * 追踪响应式对象的依赖项
+     * @param target - 响应式对象
+     * @param key - 属性键
+     */
+    function track(target, key) {
+        if (!activeEffect) {
+            return;
+        }
+        var depsMap = targetMap.get(target);
+        if (!depsMap) {
+            targetMap.set(target, (depsMap = new Map()));
+        }
+        depsMap.set(key, activeEffect);
+        console.log(targetMap);
+    }
+    /**
+     * 触发响应式对象的更新
+     * @param target - 响应式对象
+     * @param key - 属性键
+     * @param value - 新值
+     */
     function trigger(target, key, value) {
-        console.log('触发更新');
+        var depsMap = targetMap.get(target);
+        if (!depsMap) {
+            return;
+        }
+        var effects = depsMap.get(key);
+        if (effects) {
+            // effects.run();
+            console.log(effects);
+            effects.fn();
+        }
     }
 
     var get = createGetter();
@@ -21,7 +82,7 @@ var Vue = (function (exports) {
             var res = Reflect.get(target, key, receiver);
             // console.log('拦截到了读取数据', target, key);
             //依赖收集
-            track();
+            track(target, key);
             return res;
         };
     }
@@ -30,7 +91,7 @@ var Vue = (function (exports) {
             var res = Reflect.set(target, key, value, receiver);
             // console.log('拦截到了设置数据', target, key, value);
             //触发更新
-            trigger();
+            trigger(target, key);
             return res;
         };
     }
@@ -68,6 +129,7 @@ var Vue = (function (exports) {
         return proxy;
     }
 
+    exports.effect = effect;
     exports.reactive = reactive;
 
     return exports;
