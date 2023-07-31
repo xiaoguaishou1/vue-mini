@@ -1,6 +1,12 @@
 var Vue = (function (exports) {
     'use strict';
 
+    var createDep = function (effects) {
+        var dep = new Set();
+        dep.add(effects);
+        return dep;
+    };
+
     // 当前正在运行的响应式副作用函数
     var activeEffect;
     var targetMap = new WeakMap();
@@ -47,8 +53,11 @@ var Vue = (function (exports) {
         if (!depsMap) {
             targetMap.set(target, (depsMap = new Map()));
         }
-        depsMap.set(key, activeEffect);
-        console.log(targetMap);
+        var dep = depsMap.get(key);
+        if (!dep) {
+            depsMap.set(key, (dep = createDep()));
+        }
+        dep.add(activeEffect);
     }
     /**
      * 触发响应式对象的更新
@@ -61,12 +70,16 @@ var Vue = (function (exports) {
         if (!depsMap) {
             return;
         }
-        var effects = depsMap.get(key);
-        if (effects) {
-            // effects.run();
-            console.log(effects);
-            effects.fn();
+        var dep = depsMap.get(key);
+        if (!dep) {
+            return;
         }
+        //触发依赖更新
+        dep.forEach(function (effect) {
+            if (effect) {
+                effect.run();
+            }
+        });
     }
 
     var get = createGetter();

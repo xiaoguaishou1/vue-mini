@@ -1,9 +1,10 @@
+import { Dep, createDep } from "./dep";
 
 // 当前正在运行的响应式副作用函数
 export let activeEffect: ReactiveEffect | undefined;
 
 // 存储响应式对象的依赖项
-type keyToDepMap = Map<any, ReactiveEffect>;
+type keyToDepMap = Map<any, Dep>;
 const targetMap = new WeakMap<object, keyToDepMap>();
 
 
@@ -54,9 +55,13 @@ export function track(target: object, key: unknown) {
     if (!depsMap) {
         targetMap.set(target, (depsMap = new Map()));
     }
-    depsMap.set(key, activeEffect);
 
-    console.log(targetMap)
+    let dep = depsMap.get(key);
+    if (!dep) {
+        depsMap.set(key, (dep = createDep()));
+    }
+
+    dep.add(activeEffect);
 }
 
 /**
@@ -70,12 +75,19 @@ export function trigger(target: object, key: unknown, value: any) {
     if (!depsMap) {
         return;
     }
-    const effects = depsMap.get(key);
-    if (effects) {
-        // effects.run();
-        console.log(effects)
-        effects.fn();
+
+    const dep: Dep | undefined = depsMap.get(key);
+    if (!dep) {
+        return;
     }
+
+    //触发依赖更新
+    dep.forEach((effect: ReactiveEffect) => {
+        if (effect) {
+            effect.run();
+        }
+    });
+
 }
 
 

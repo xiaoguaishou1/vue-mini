@@ -20,8 +20,8 @@
 
 <body>
     <div id="app">
-        <p id="p1"></p>
-        <p id="p2"></p>
+        <p id="p1">213</p>
+        <p id="p2">1</p>
     </div>
     <script>
         const { reactive, effect } = Vue;
@@ -29,13 +29,24 @@
             name: 'tom'
         })
 
-        effect(() => {
-            document.querySelector('#p1').innerHTML = obj.name
+        const obj2 = reactive({
+            name: 'tom1'
         })
+
+        setTimeout(() => {
+            effect(() => {
+                document.querySelector('#p1').innerHTML = obj.name
+            })
+
+
+            effect(() => {
+                document.querySelector('#p2').innerHTML = obj2.name
+            })
+        }, 2000)
 
         console.log(obj.name)
         obj.name = 'jerry'
-
+        obj2.name = '21312'
     </script>
 </body>
 
