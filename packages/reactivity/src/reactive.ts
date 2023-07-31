@@ -2,8 +2,8 @@
  * @Author: 阿喜
  * @Date: 2023-02-10 14:10:08
  * @LastEditors: 阿喜
- * @LastEditTime: 2023-02-10 23:22:43
- * @FilePath: \vue3-core\packages\reactivity\src\reactive.ts
+ * @LastEditTime: 2023-07-31 21:30:35
+ * @FilePath: \vue-mini\packages\reactivity\src\reactive.ts
  * @Description:  构建响应式对象 reactive
  * Map和WeakMap的区别 来源csdn:https://blog.csdn.net/qq_26834399/article/details/105071907
  */
@@ -28,6 +28,7 @@ export function reactive(target: object) {
     return createReactiveObject(
         target,
         mutableHandlers,
+        
         reactiveMap,
     )
 }
