@@ -1,7 +1,39 @@
 var Vue = (function (exports) {
     'use strict';
 
-    var mutableHanders = {};
+    function track(target, key) {
+        console.log('依赖收集');
+    }
+    function trigger(target, key, value) {
+        console.log('触发更新');
+    }
+
+    var get = createGetter();
+    var set = createSetter();
+    var mutableHanders = {
+        //实现set和get方法
+        get: get,
+        set: set
+    };
+    function createGetter() {
+        // 依照源码实现闭包
+        return function get(target, key, receiver) {
+            var res = Reflect.get(target, key, receiver);
+            // console.log('拦截到了读取数据', target, key);
+            //依赖收集
+            track();
+            return res;
+        };
+    }
+    function createSetter() {
+        return function set(target, key, value, receiver) {
+            var res = Reflect.set(target, key, value, receiver);
+            // console.log('拦截到了设置数据', target, key, value);
+            //触发更新
+            trigger();
+            return res;
+        };
+    }
 
     // 响应式对象映射表
     var reactiveMap = new WeakMap();
