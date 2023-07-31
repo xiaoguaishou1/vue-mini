@@ -24,21 +24,12 @@
         <p id="p2"></p>
     </div>
     <script>
-        const { reactive, effect } = Vue;
+        const { reactive } = Vue;
         const obj = reactive({
             name: 'tom'
         })
 
-        effect(() => {
-            document.querySelector("#p1").innerHTML = obj.name;
-        })
-        effect(() => {
-            document.querySelector("#p2").innerHTML = obj.name;
-        })
-
-        setTimeout(() => {
-            obj.name = "jhon";
-        }, 2000);
+        console.log(obj)
     </script>
 </body>
 
