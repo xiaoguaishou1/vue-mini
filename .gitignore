@@ -1,1 +1,3 @@
 node_modules
+packages/vue/dist/vue.js
+packages/vue/dist/vue.js.map

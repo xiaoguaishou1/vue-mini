@@ -6,7 +6,8 @@ var Vue = (function (exports) {
      */
     var isArray = Array.isArray;
     var extend = Object.assign;
-
+ 
+    
     /******************************************************************************
     Copyright (c) Microsoft Corporation.
 
