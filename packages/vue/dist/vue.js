@@ -155,6 +155,9 @@ var Vue = (function (exports) {
             this.fn = fn;
             this.scheduler = scheduler;
         }
+        /**
+         * 运行响应式副作用函数
+         */
         ReactiveEffect.prototype.run = function () {
             activeEffect = this;
             return this.fn();
@@ -185,82 +188,145 @@ var Vue = (function (exports) {
     var get = createGetter(); // 回调函数
     var set = createSetter(); // 回调函数
     /**
-     * @description: 监听代理对象
-     * @return {*}
+     * 追踪响应式对象的依赖项
+     * @param target - 响应式对象
+     * @param key - 属性键
      */
-    var mutableHandlers = {
+    function track(target, key) {
+        if (!activeEffect) {
+            return;
+        }
+        var depsMap = targetMap.get(target);
+        if (!depsMap) {
+            targetMap.set(target, (depsMap = new Map()));
+        }
+        var dep = depsMap.get(key);
+        if (!dep) {
+            depsMap.set(key, (dep = createDep()));
+        }
+        dep.add(activeEffect);
+    }
+    /**
+     * 触发响应式对象的更新
+     * @param target - 响应式对象
+     * @param key - 属性键
+     * @param value - 新值
+     */
+    function trigger(target, key, value) {
+        var depsMap = targetMap.get(target);
+        if (!depsMap) {
+            return;
+        }
+        var dep = depsMap.get(key);
+        if (!dep) {
+            return;
+        }
+        //触发依赖更新
+        dep.forEach(function (effect) {
+            if (effect) {
+                effect.run();
+            }
+        });
+    }
+
+    var get = createGetter();
+    var set = createSetter();
+    var mutableHanders = {
+        //实现set和get方法
         get: get,
         set: set
     };
     function createGetter() {
         return function get(target, key, receiver) {
-            //利用Reflect.get方法获取值
             var res = Reflect.get(target, key, receiver);
-            //收集依赖
+            // console.log('拦截到了读取数据', target, key);
+            //依赖收集
             track(target, key);
             return res;
         };
     }
     function createSetter() {
         return function set(target, key, value, receiver) {
-            //使用Reflect.set方法设置值
             var res = Reflect.set(target, key, value, receiver);
-            //触发依赖
+            // console.log('拦截到了设置数据', target, key, value);
+            //触发更新
             trigger(target, key);
             return res;
         };
     }
 
-    /*
-     * @Author: 阿喜
-     * @Date: 2023-02-10 14:10:08
-     * @LastEditors: 阿喜
-     * @LastEditTime: 2023-02-10 23:22:43
-     * @FilePath: \vue3-core\packages\reactivity\src\reactive.ts
-     * @Description:  构建响应式对象 reactive
-     * Map和WeakMap的区别 来源csdn:https://blog.csdn.net/qq_26834399/article/details/105071907
-     */
-    /**
-     * @description: 使用 WeakMap 保存响应式对象
-     * @return {*}
-     */
+    // 响应式对象映射表
     var reactiveMap = new WeakMap();
     /**
-     * @description:
-     * @param {object} target
-     * @param {*} mutableHandlers
-     * @param {*} reactiveMap
-     * @return {*}
+     * 创建响应式对象
+     * @param target 目标对象
+     * @returns 响应式对象
      */
     function reactive(target) {
-        //创建响应式对象 
-        return createReactiveObject(target, mutableHandlers, reactiveMap);
+        return createReactiveObject(target, mutableHanders, reactiveMap);
     }
     /**
-     * @description:
-     * @param {object} target
-     * @param {ProxyHandler} baseHandler
-     * @param {WeakMap} proxyMap
-     * @param {*} any
-     * @param {*} proxy
-     * @return {*}
+     * 创建响应式对象
+     * @param target 目标对象
+     * @param baseHandlers 基础代理处理器
+     * @param proxyMap 代理映射表
+     * @returns 响应式对象
      */
-    function createReactiveObject(target, baseHandler, proxyMap) {
+    function createReactiveObject(target, baseHandlers, proxyMap) {
         var existingProxy = proxyMap.get(target);
-        // 如果已经是响应式对象，直接返回
         if (existingProxy) {
             return existingProxy;
         }
-        // 如果不是响应式对象，创建一个响应式对象
-        var proxy = new Proxy(target, baseHandler);
-        // 将响应式对象保存到 WeakMap 中
+        var proxy = new Proxy(target, baseHandlers);
         proxyMap.set(target, proxy);
-        // 返回响应式对象
         return proxy;
     }
+    function toReactive(value) {
+        return isObject(value) ? reactive(value) : value;
+    }
+
+    function ref(value) {
+        return createRef(value);
+    }
+    function createRef(rawValue, shallow) {
+        if (isRef(rawValue)) {
+            return rawValue;
+        }
+        return new RefImpl(rawValue, shallow);
+    }
+    function trackRefValue(ref) {
+        if (activeEffect) {
+            trackEffects(ref.dep || (ref.dep = createDep()));
+        }
+    }
+    function isRef(r) {
+        return Boolean(r && r.__v_isRef === true);
+    }
+    var RefImpl = /** @class */ (function () {
+        function RefImpl(value, _shallow) {
+            if (_shallow === void 0) { _shallow = false; }
+            this._shallow = _shallow;
+            this.__v_isRef = true;
+            this.dep = undefined;
+            this._value = _shallow ? value : toReactive(value);
+        }
+        Object.defineProperty(RefImpl.prototype, "value", {
+            get: function () {
+                trackRefValue(this);
+                return this._value;
+            },
+            set: function (newValue) {
+                this._value = newValue;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        return RefImpl;
+    }());
 
     exports.effect = effect;
     exports.reactive = reactive;
+    exports.ref = ref;
 
     return exports;
 
