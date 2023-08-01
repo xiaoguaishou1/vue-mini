@@ -1,6 +1,13 @@
 var Vue = (function (exports) {
     'use strict';
 
+    /**
+     * 判断是否为一个数组
+     */
+    var isObject = function (val) {
+        return val !== null && typeof val === 'object';
+    };
+
     var createDep = function (effects) {
         var dep = new Set();
         dep.add(effects);
@@ -18,6 +25,11 @@ var Vue = (function (exports) {
     function effect(fn, options) {
         var _effect = new ReactiveEffect(fn, options);
         _effect.run();
+    }
+    function trackEffects(dep) {
+        if (activeEffect) {
+            dep.add(activeEffect);
+        }
     }
     /**
      * 响应式副作用函数类
@@ -124,12 +136,6 @@ var Vue = (function (exports) {
      * @param target 目标对象
      * @param baseHandlers 基础代理处理器
      * @param proxyMap 代理映射表
-     */
-    /**
-     * 创建响应式对象
-     * @param target 目标对象
-     * @param baseHandlers 基础代理处理器
-     * @param proxyMap 代理映射表
      * @returns 响应式对象
      */
     function createReactiveObject(target, baseHandlers, proxyMap) {
@@ -141,9 +147,52 @@ var Vue = (function (exports) {
         proxyMap.set(target, proxy);
         return proxy;
     }
+    function toReactive(value) {
+        return isObject(value) ? reactive(value) : value;
+    }
+
+    function ref(value) {
+        return createRef(value);
+    }
+    function createRef(rawValue, shallow) {
+        if (isRef(rawValue)) {
+            return rawValue;
+        }
+        return new RefImpl(rawValue, shallow);
+    }
+    function trackRefValue(ref) {
+        if (activeEffect) {
+            trackEffects(ref.dep || (ref.dep = createDep()));
+        }
+    }
+    function isRef(r) {
+        return Boolean(r && r.__v_isRef === true);
+    }
+    var RefImpl = /** @class */ (function () {
+        function RefImpl(value, _shallow) {
+            if (_shallow === void 0) { _shallow = false; }
+            this._shallow = _shallow;
+            this.__v_isRef = true;
+            this.dep = undefined;
+            this._value = _shallow ? value : toReactive(value);
+        }
+        Object.defineProperty(RefImpl.prototype, "value", {
+            get: function () {
+                trackRefValue(this);
+                return this._value;
+            },
+            set: function (newValue) {
+                this._value = newValue;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        return RefImpl;
+    }());
 
     exports.effect = effect;
     exports.reactive = reactive;
+    exports.ref = ref;
 
     return exports;
 

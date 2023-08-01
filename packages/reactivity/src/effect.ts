@@ -19,6 +19,11 @@ export function effect<T = any>(fn: () => T, options?: any): any {
 }
 
 
+export function trackEffects(dep: Dep) {
+    if (activeEffect) {
+        dep.add(activeEffect);
+    }
+}
 
 /**
  * 响应式副作用函数类
