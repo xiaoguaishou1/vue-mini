@@ -1,193 +1,69 @@
 var Vue = (function (exports) {
     'use strict';
 
-    /**
-     * 判断是否为一个数组
+    /*
+     * @Author: 阿喜
+     * @Date: 2023-07-31 21:09:16
+     * @LastEditors: 阿喜
+     * @LastEditTime: 2023-08-02 21:46:02
+     * @FilePath: \vue-mini\packages\shared\src\index.ts
+     * @Description:
+     *
      */
-    var isArray = Array.isArray;
-    var extend = Object.assign;
- 
-    
-    /******************************************************************************
-    Copyright (c) Microsoft Corporation.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose with or without fee is hereby granted.
-
-    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-    AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-    LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-    OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-    PERFORMANCE OF THIS SOFTWARE.
-    ***************************************************************************** */
-
-    function __values(o) {
-        var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
-        if (m) return m.call(o);
-        if (o && typeof o.length === "number") return {
-            next: function () {
-                if (o && i >= o.length) o = void 0;
-                return { value: o && o[i++], done: !o };
-            }
-        };
-        throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
-    }
-
-    function __read(o, n) {
-        var m = typeof Symbol === "function" && o[Symbol.iterator];
-        if (!m) return o;
-        var i = m.call(o), r, ar = [], e;
-        try {
-            while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
-        }
-        catch (error) { e = { error: error }; }
-        finally {
-            try {
-                if (r && !r.done && (m = i["return"])) m.call(i);
-            }
-            finally { if (e) throw e.error; }
-        }
-        return ar;
-    }
-
-    function __spreadArray(to, from, pack) {
-        if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-            if (ar || !(i in from)) {
-                if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-                ar[i] = from[i];
-            }
-        }
-        return to.concat(ar || Array.prototype.slice.call(from));
-    }
+    var hasChanged = function (value, oldValue) {
+        return !Object.is(value, oldValue);
+    };
+    var isObject = function (val) {
+        return val !== null && typeof val === 'object';
+    };
+    var isFunction = function (val) {
+        return typeof val === 'function';
+    };
 
     var createDep = function (effects) {
-        var dep = new Set(effects);
+        var dep = new Set();
+        dep.add(effects);
         return dep;
     };
 
+    // 当前正在运行的响应式副作用函数
+    var activeEffect;
     var targetMap = new WeakMap();
-    function track(target, key) {
-        // 如果当前不存在执行函数，则直接 return
-        if (!activeEffect)
-            return;
-        // 尝试从 targetMap 中，根据 target 获取 map
-        var depsMap = targetMap.get(target);
-        // 如果 map 不存在，则生成新的 map，并把该对象赋值给对应的 value
-        if (!depsMap) {
-            targetMap.set(target, (depsMap = new Map()));
-        }
-        // 获取指定 key 的 dep
-        var dep = depsMap.get(key);
-        // 如果 dep 不存在，则生成新的 dep，并把该对象赋值给对应的 value
-        if (!dep) {
-            depsMap.set(key, (dep = createDep()));
-        }
-        trackEffects(dep);
+    /**
+     * 创建一个响应式副作用函数
+     * @param fn - 副作用函数
+     * @param options - 副作用函数选项
+     */
+    function effect(fn, options) {
+        var _effect = new ReactiveEffect(fn, options);
+        _effect.run();
     }
     function trackEffects(dep) {
-        // activeEffect
-        dep.add(activeEffect);
-    }
-    function trigger(target, key) {
-        // 获取 target 对应的 map
-        var depsMap = targetMap.get(target);
-        // 如果 map 不存在，则直接 return
-        if (!depsMap) {
-            return;
-        }
-        // 如果 key 不存在，则遍历 map，触发所有的 effect
-        var dep = depsMap.get(key);
-        if (!dep) {
-            return;
-        }
-        triggerEffects(dep);
-    }
-    //以此触发依赖
-    function triggerEffects(dep) {
-        var e_1, _a, e_2, _b;
-        var effects = isArray(dep) ? dep : __spreadArray([], __read(dep), false);
-        try {
-            for (var effects_1 = __values(effects), effects_1_1 = effects_1.next(); !effects_1_1.done; effects_1_1 = effects_1.next()) {
-                var effect_1 = effects_1_1.value;
-                if (effect_1.computed) {
-                    triggerEffect(effect_1);
-                }
-            }
-        }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-        finally {
-            try {
-                if (effects_1_1 && !effects_1_1.done && (_a = effects_1.return)) _a.call(effects_1);
-            }
-            finally { if (e_1) throw e_1.error; }
-        }
-        try {
-            for (var effects_2 = __values(effects), effects_2_1 = effects_2.next(); !effects_2_1.done; effects_2_1 = effects_2.next()) {
-                var effect_2 = effects_2_1.value;
-                if (!effect_2.computed) {
-                    triggerEffect(effect_2);
-                }
-            }
-        }
-        catch (e_2_1) { e_2 = { error: e_2_1 }; }
-        finally {
-            try {
-                if (effects_2_1 && !effects_2_1.done && (_b = effects_2.return)) _b.call(effects_2);
-            }
-            finally { if (e_2) throw e_2.error; }
+        if (activeEffect) {
+            dep.add(activeEffect);
         }
     }
-    //触发 effect
-    function triggerEffect(effect) {
-        if (effect.scheduler) {
-            effect.scheduler();
-        }
-        else {
-            effect.run();
-        }
-    }
-    //当前的 effect
-    var activeEffect;
+    /**
+     * 响应式副作用函数类
+     * @param fn - 副作用函数
+     * @param options - 副作用函数选项
+     */
     var ReactiveEffect = /** @class */ (function () {
-        function ReactiveEffect(fn, scheduler) {
-            if (scheduler === void 0) { scheduler = null; }
+        function ReactiveEffect(fn, options) {
             this.fn = fn;
-            this.scheduler = scheduler;
+            this.options = options;
+            this.fn = fn;
+            this.options = options;
         }
         /**
          * 运行响应式副作用函数
          */
         ReactiveEffect.prototype.run = function () {
             activeEffect = this;
-            return this.fn();
+            this.fn();
         };
-        ReactiveEffect.prototype.stop = function () { };
         return ReactiveEffect;
     }());
-    function effect(fn, options) {
-        // 生成 ReactiveEffect 
-        var _effect = new ReactiveEffect(fn);
-        if (options) {
-            extend(_effect, options);
-        }
-        if (!options || !options.lazy) {
-            _effect.run();
-        }
-    }
-
-    /*
-     * @Author: 阿喜
-     * @Date: 2023-02-10 14:16:04
-     * @LastEditors: 阿喜
-     * @LastEditTime: 2023-02-13 19:58:19
-     * @FilePath: \vue3-core\packages\reactivity\src\baseHandlers.ts
-     * @Description: 实现框架中的createGetter  createSetter
-     *
-     */
-    var get = createGetter(); // 回调函数
-    var set = createSetter(); // 回调函数
     /**
      * 追踪响应式对象的依赖项
      * @param target - 响应式对象
@@ -238,6 +114,7 @@ var Vue = (function (exports) {
         set: set
     };
     function createGetter() {
+        // 依照源码实现闭包
         return function get(target, key, receiver) {
             var res = Reflect.get(target, key, receiver);
             // console.log('拦截到了读取数据', target, key);
@@ -300,6 +177,10 @@ var Vue = (function (exports) {
             trackEffects(ref.dep || (ref.dep = createDep()));
         }
     }
+    function triggerRefValue(ref) {
+        if (ref.dep)
+            trackEffects(ref.dep);
+    }
     function isRef(r) {
         return Boolean(r && r.__v_isRef === true);
     }
@@ -317,7 +198,11 @@ var Vue = (function (exports) {
                 return this._value;
             },
             set: function (newValue) {
-                this._value = newValue;
+                if (hasChanged(newValue, this.oldRawValue)) {
+                    this.oldRawValue = newValue;
+                    this._value = toReactive(newValue);
+                    triggerRefValue(this);
+                }
             },
             enumerable: false,
             configurable: true
@@ -325,6 +210,50 @@ var Vue = (function (exports) {
         return RefImpl;
     }());
 
+    /*
+     * @Author: 阿喜
+     * @Date: 2023-07-31 21:20:09
+     * @LastEditors: 阿喜
+     * @LastEditTime: 2023-08-02 22:10:49
+     * @FilePath: \vue-mini\packages\reactivity\src\computed.ts
+     * @Description:
+     *
+     */
+    var ComputedRefImpl = /** @class */ (function () {
+        function ComputedRefImpl(getter) {
+            var _this = this;
+            this.dep = undefined;
+            this._dirty = true;
+            this.__v_isRef = true;
+            this.effect = new ReactiveEffect(getter, function () {
+                if (!_this._dirty) {
+                    _this._dirty = true;
+                }
+            });
+            this.effect.computed = this;
+        }
+        Object.defineProperty(ComputedRefImpl.prototype, "value", {
+            get: function () {
+                trackRefValue(this);
+                this._value = this.effect.fn();
+                return this._value;
+            },
+            enumerable: false,
+            configurable: true
+        });
+        return ComputedRefImpl;
+    }());
+    function computed(getterOrOption) {
+        var getter;
+        var onlyGetter = isFunction(getterOrOption);
+        if (onlyGetter) {
+            getter = getterOrOption;
+        }
+        var cRef = new ComputedRefImpl(getter);
+        return cRef;
+    }
+
+    exports.computed = computed;
     exports.effect = effect;
     exports.reactive = reactive;
     exports.ref = ref;

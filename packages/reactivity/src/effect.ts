@@ -1,3 +1,4 @@
+import { ComputedRefImpl } from "./computed";
 import { Dep, createDep } from "./dep";
 
 // 当前正在运行的响应式副作用函数
@@ -31,6 +32,7 @@ export function trackEffects(dep: Dep) {
  * @param options - 副作用函数选项
  */
 export class ReactiveEffect<T = any> {
+    computed?: ComputedRefImpl<T>
     constructor(public fn: () => T, public options?: any) {
         this.fn = fn;
         this.options = options;

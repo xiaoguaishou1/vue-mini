@@ -7,7 +7,7 @@ import { toReactive } from "./reactive";
  * @Author: 阿喜
  * @Date: 2023-07-31 21:20:09
  * @LastEditors: 阿喜
- * @LastEditTime: 2023-08-02 20:37:21
+ * @LastEditTime: 2023-08-02 20:40:56
  * @FilePath: \vue-mini\packages\reactivity\src\ref.ts
  * @Description: 
  * 
@@ -57,7 +57,6 @@ class RefImpl<T = unknown> {
     }
 
     set value(newValue) {
-        // this._value = newValue;
         if (hasChanged(newValue, this.oldRawValue)) {
             this.oldRawValue = newValue;
             this._value = toReactive(newValue);
