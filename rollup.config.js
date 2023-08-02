@@ -2,8 +2,8 @@
  * @Author: 阿喜
  * @Date: 2023-02-06 21:03:48
  * @LastEditors: 阿喜
- * @LastEditTime: 2023-02-10 15:41:56
- * @FilePath: /vue3-mini-core/rollup.config.js
+ * @LastEditTime: 2023-08-02 22:20:20
+ * @FilePath: \vue-mini\rollup.config.js
  * @Description: 
  * 
  */
@@ -20,6 +20,7 @@ export default [
             // 导出 iife 模式的包
             {
                 // 开启 SourceMap
+                
                 sourcemap: true,
                 // 导出的文件地址
                 file: './packages/vue/dist/vue.js',
