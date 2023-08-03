@@ -10,6 +10,10 @@ var Vue = (function (exports) {
      * @Description:
      *
      */
+    /**
+     * 判断是否为一个数组
+     */
+    var isArray = Array.isArray;
     var hasChanged = function (value, oldValue) {
         return !Object.is(value, oldValue);
     };
@@ -18,6 +22,9 @@ var Vue = (function (exports) {
     };
     var isFunction = function (val) {
         return typeof val === 'function';
+    };
+    var isString = function (val) {
+        return typeof val === 'string';
     };
 
     var createDep = function (effects) {
@@ -253,8 +260,70 @@ var Vue = (function (exports) {
         return cRef;
     }
 
+    function isVNode(value) {
+        return value ? value.__is_isVNode === true : false;
+    }
+    function createVNode(type, props, children) {
+        var shapeFlag = isString(type) ? 1 /* ShapeFlags.ELEMENT */ : 0;
+        return createBaseVNode(type, props, children, shapeFlag);
+    }
+    function createBaseVNode(type, props, children, shapeFlag) {
+        var vnode = {
+            __is_isVNode: true,
+            type: type,
+            props: props,
+            children: children,
+            shapeFlag: shapeFlag
+        };
+        normalizeChildren(vnode, children);
+        return vnode;
+    }
+    function normalizeChildren(vnode, children) {
+        var type = 0;
+        vnode.shapeFlag;
+        if (children === null) {
+            children = [];
+            //数组
+        }
+        else if (isArray(children)) ;
+        else if (typeof children === 'object') ;
+        else if (isFunction(children)) ;
+        else {
+            children = String(children);
+            type = 8 /* ShapeFlags.TEXT_CHILDREN */;
+        }
+        vnode.children = children;
+        //按位或运算
+        vnode.shapeFlag |= type;
+    }
+
+    function h(type, propsOrChildren, children) {
+        var l = arguments.length;
+        if (l === 2) {
+            if (isObject(propsOrChildren) && !isArray(propsOrChildren)) {
+                if (isVNode(propsOrChildren)) {
+                    return createVNode(type, null, [propsOrChildren]);
+                }
+                return createVNode(type, propsOrChildren, []);
+            }
+            else {
+                return createVNode(type, null, propsOrChildren);
+            }
+        }
+        else {
+            if (l > 3) {
+                children = Array.prototype.slice.call(arguments, 2);
+            }
+            else if (l === 3 && isVNode(children)) {
+                children = [children];
+            }
+            return createVNode(type, propsOrChildren, children);
+        }
+    }
+
     exports.computed = computed;
     exports.effect = effect;
+    exports.h = h;
     exports.reactive = reactive;
     exports.ref = ref;
 
