@@ -1,5 +1,14 @@
-import { isArray, isFunction, isString } from "@vue/shared";
-import { ShapeFlags } from "packages/shared/src/shapeFlags";
+/*
+ * @Author: 阿喜
+ * @Date: 2023-08-03 22:55:38
+ * @LastEditors: 阿喜
+ * @LastEditTime: 2023-08-03 23:19:12
+ * @FilePath: \vue-mini\packages\runtime-core\src\vnode.ts
+ * @Description: 
+ * 
+ */
+import { isArray, isFunction, isString } from "../../shared/src/index";
+import { ShapeFlags } from "../../shared/src/shapeFlags";
 
 export interface VNode {
     __is_isVNode: true;

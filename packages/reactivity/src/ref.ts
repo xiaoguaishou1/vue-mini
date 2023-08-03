@@ -1,4 +1,13 @@
-import { hasChanged } from "@vue/shared";
+/*
+ * @Author: 阿喜
+ * @Date: 2023-07-31 21:20:09
+ * @LastEditors: 阿喜
+ * @LastEditTime: 2023-08-03 23:20:03
+ * @FilePath: \vue-mini\packages\reactivity\src\ref.ts
+ * @Description: 
+ * 
+ */
+import { hasChanged } from "../../shared/src/index";
 import { createDep, Dep } from "./dep";
 import { activeEffect, trackEffects } from "./effect";
 import { toReactive } from "./reactive";

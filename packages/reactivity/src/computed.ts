@@ -2,12 +2,12 @@
  * @Author: 阿喜
  * @Date: 2023-07-31 21:20:09
  * @LastEditors: 阿喜
- * @LastEditTime: 2023-08-02 22:10:49
+ * @LastEditTime: 2023-08-03 23:18:18
  * @FilePath: \vue-mini\packages\reactivity\src\computed.ts
  * @Description: 
  * 
  */
-import { isFunction } from '@vue/shared'
+import { isFunction } from "../../shared/src/index";
 import { Dep } from './dep'
 import { ReactiveEffect } from './effect';
 import { trackRefValue } from './ref';
