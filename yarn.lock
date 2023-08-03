@@ -4,7 +4,6 @@
 
 "@rollup/plugin-commonjs@^22.0.1":
   version "22.0.2"
-  
   resolved "https://registry.npmmirror.com/@rollup/plugin-commonjs/-/plugin-commonjs-22.0.2.tgz#ee8ca8415cda30d383b4096aad5222435b4b69b6"
   integrity sha512-//NdP6iIwPbMTcazYsiBMbJW7gfmpHom33u1beiIoHDEM0Q9clvtQB1T0efvMqHeKsGohiHo97BCPCkBXdscwg==
   dependencies:
