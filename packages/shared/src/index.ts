@@ -22,3 +22,8 @@ export const isObject = (val: unknown) =>
 export const isFunction = (val: unknown): val is Function => {
     return typeof val === 'function'
 }
+
+
+export const isString = (val: unknown): val is String => {
+    return typeof val === 'string'
+}
