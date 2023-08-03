@@ -1,0 +1,52 @@
+<!--
+ * @Author: panghu 760695955@qq.com
+ * @Date: 2023-08-03 17:10:52
+ * @LastEditors: panghu 760695955@qq.com
+ * @LastEditTime: 2023-08-03 17:28:02
+ * @FilePath: /vue-mini/index.html
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script>
+      class targetProxy {
+        constructor(obj) {
+          this.target = obj
+          this.proxy = new Proxy(this.target, {
+            get: (target, key) => {
+              console.log('get', key)
+
+              return Reflect.get(target, key)
+            },
+            set: (target, key, value) => {
+              console.log('set', key, value)
+
+              if (key === 'name') {
+                document.querySelectorAll('#app')[0].innerHTML = value
+              }
+
+              return Reflect.set(target, key, value)
+            }
+          })
+        }
+      }
+      const obj = new targetProxy({
+        name: 'tom',
+        age: 18
+      })
+
+      document.querySelectorAll('#app')[0].innerHTML = obj.proxy.name
+
+      setTimeout(() => {
+        obj.proxy.name = 'panghu'
+      }, 3000)
+    </script>
+  </body>
+</html>
