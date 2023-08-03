@@ -1,4 +1,13 @@
-import { isArray, isObject } from "@vue/shared";
+/*
+ * @Author: 阿喜
+ * @Date: 2023-08-03 22:55:38
+ * @LastEditors: 阿喜
+ * @LastEditTime: 2023-08-03 23:19:53
+ * @FilePath: \vue-mini\packages\runtime-core\src\h.ts
+ * @Description: 
+ * 
+ */
+import { isArray, isObject } from "../../shared/src/index";
 import { createVNode, isVNode } from "./vnode";
 
 export function h(type: any, propsOrChildren?: any, children?: any) {

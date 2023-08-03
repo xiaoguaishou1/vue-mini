@@ -1,4 +1,4 @@
-import { isObject } from "@vue/shared";
+import { isObject } from "../../shared/src/index";
 import { mutableHanders } from "./baseHandlers";
 
 // 响应式对象映射表
