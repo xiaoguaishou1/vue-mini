@@ -3,3 +3,5 @@ packages/vue/dist/vue.js
 packages/vue/dist/vue.js.map
 yarn.lock
 pnpm-lock.yaml
+packages/vue/dist/vue.js
+packages/vue/dist/vue.js.map
