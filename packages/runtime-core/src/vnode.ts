@@ -2,12 +2,12 @@
  * @Author: 阿喜
  * @Date: 2023-08-03 22:55:38
  * @LastEditors: 阿喜
- * @LastEditTime: 2023-08-03 23:19:12
+ * @LastEditTime: 2023-08-05 00:39:40
  * @FilePath: \vue-mini\packages\runtime-core\src\vnode.ts
  * @Description: 
  * 
  */
-import { isArray, isFunction, isString } from "../../shared/src/index";
+import { isArray, isFunction, isObject, isString } from "../../shared/src/index";
 import { ShapeFlags } from "../../shared/src/shapeFlags";
 
 export interface VNode {
@@ -23,7 +23,7 @@ export function isVNode(value: any): value is VNode {
 }
 
 export function createVNode(type, props, children): VNode {
-    const shapeFlag = isString(type) ? ShapeFlags.ELEMENT : 0;
+    const shapeFlag = isString(type) ? ShapeFlags.ELEMENT : isObject(type) ? ShapeFlags.STATEFUL_COMPONENT : 0;
     return createBaseVNode(type, props, children, shapeFlag);
 }
 
@@ -43,10 +43,11 @@ export function createBaseVNode(type, props, children, shapeFlag: number): VNode
 export function normalizeChildren(vnode: VNode, children: unknown) {
     let type = 0;
     const { shapeFlag } = vnode;
-    if (children === null) {
+    if (children == null) {
         children = [];
         //数组
     } else if (isArray(children)) {
+        type = ShapeFlags.ARRAY_CHILDREN;
         //对象
     } else if (typeof children === 'object') {
         //函数
@@ -57,7 +58,7 @@ export function normalizeChildren(vnode: VNode, children: unknown) {
         type = ShapeFlags.TEXT_CHILDREN
     }
     vnode.children = children;
-    //按位或运算
+    //按位或运算  代表当前node的类型 后续在render函数中会用到
     vnode.shapeFlag |= type;
 }
 
