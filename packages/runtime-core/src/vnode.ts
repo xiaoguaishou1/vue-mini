@@ -2,13 +2,14 @@
  * @Author: 阿喜
  * @Date: 2023-08-03 22:55:38
  * @LastEditors: 阿喜
- * @LastEditTime: 2023-08-05 21:44:14
+ * @LastEditTime: 2023-08-06 17:08:15
  * @FilePath: \vue-mini\packages\runtime-core\src\vnode.ts
  * @Description: 
  * 
  */
 import { isArray, isFunction, isObject, isString } from "../../shared/src/index";
 import { ShapeFlags } from "../../shared/src/shapeFlags";
+import { normalizeClass } from "./normalize";
 
 export const Text = Symbol('Text');
 export const Fragment = Symbol('Fragment');
@@ -28,6 +29,12 @@ export function isVNode(value: any): value is VNode {
 }
 
 export function createVNode(type, props, children): VNode {
+    if (props) {
+        let { class: klass, style } = props;
+        if (klass && !isString(klass)) {
+            props.class = normalizeClass(klass);
+        }
+    }
     const shapeFlag = isString(type) ? ShapeFlags.ELEMENT :
         isObject(type) ? ShapeFlags.STATEFUL_COMPONENT : 0;
     return createBaseVNode(type, props, children, shapeFlag);

@@ -44,8 +44,9 @@ export function trackRefValue(ref) {
 }
 
 export function triggerRefValue(ref) {
-    if (ref.dep)
+    if (ref.dep) {
         trackEffects(ref.dep);
+    }
 }
 
 function isRef(r: any): r is Ref {

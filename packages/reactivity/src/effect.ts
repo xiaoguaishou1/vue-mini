@@ -1,6 +1,7 @@
 import { ComputedRefImpl } from "./computed";
 import { Dep, createDep } from "./dep";
 
+export type EffectScheduler = (...args: any[]) => any;
 // 当前正在运行的响应式副作用函数
 export let activeEffect: ReactiveEffect | undefined;
 
@@ -33,9 +34,8 @@ export function trackEffects(dep: Dep) {
  */
 export class ReactiveEffect<T = any> {
     computed?: ComputedRefImpl<T>
-    constructor(public fn: () => T, public options?: any) {
+    constructor(public fn: () => T, public scheduler: EffectScheduler | null) {
         this.fn = fn;
-        this.options = options;
     }
 
     /**
@@ -91,7 +91,11 @@ export function trigger(target: object, key: unknown, value: any) {
     //触发依赖更新
     dep.forEach((effect: ReactiveEffect) => {
         if (effect) {
-            effect.run();
+            if (effect.scheduler) {
+                effect.scheduler();
+            } else {
+                effect.run();
+            }
         }
     });
 
