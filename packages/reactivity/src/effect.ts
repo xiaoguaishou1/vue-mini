@@ -1,105 +1,98 @@
-import { ComputedRefImpl } from "./computed";
-import { Dep, createDep } from "./dep";
+import { extend, isArray } from '@vue/shared'
+import { ComputedRefImpl } from './computed'
+import { createDep, Dep } from './dep'
 
-export type EffectScheduler = (...args: any[]) => any;
-// 当前正在运行的响应式副作用函数
-export let activeEffect: ReactiveEffect | undefined;
+export type EffectScheduler = (...args: any[]) => any
 
-// 存储响应式对象的依赖项
-type keyToDepMap = Map<any, Dep>;
-const targetMap = new WeakMap<object, keyToDepMap>();
+type KeyToDepMap = Map<any, Dep>
+const targetMap = new WeakMap<any, KeyToDepMap>()
 
+export function track(target: object, key: unknown) {
+    if (!activeEffect) return
+    let depsMap = targetMap.get(target)
+    if (!depsMap) {
+        targetMap.set(target, (depsMap = new Map()))
+    }
+    let dep = depsMap.get(key)
+    if (!dep) {
+        depsMap.set(key, (dep = createDep()))
+    }
 
-/**
- * 创建一个响应式副作用函数
- * @param fn - 副作用函数
- * @param options - 副作用函数选项
- */
-export function effect<T = any>(fn: () => T, options?: any): any {
-    const _effect = new ReactiveEffect(fn, options);
-    _effect.run();
+    trackEffects(dep)
 }
 
 
 export function trackEffects(dep: Dep) {
-    if (activeEffect) {
-        dep.add(activeEffect);
+    dep.add(activeEffect!)
+}
+
+
+export function trigger(target: object, key?: unknown) {
+    const depsMap = targetMap.get(target)
+    if (!depsMap) {
+        return
+    }
+    let dep: Dep | undefined = depsMap.get(key)
+    if (!dep) {
+        return
+    }
+    triggerEffects(dep)
+}
+
+
+export function triggerEffects(dep: Dep) {
+    const effects = isArray(dep) ? dep : [...dep]
+    for (const effect of effects) {
+        if (effect.computed) {
+            triggerEffect(effect)
+        }
+    }
+    for (const effect of effects) {
+        if (!effect.computed) {
+            triggerEffect(effect)
+        }
     }
 }
 
-/**
- * 响应式副作用函数类
- * @param fn - 副作用函数
- * @param options - 副作用函数选项
- */
+
+export function triggerEffect(effect: ReactiveEffect) {
+    if (effect.scheduler) {
+        effect.scheduler()
+    } else {
+        effect.run()
+    }
+}
+
+export let activeEffect: ReactiveEffect | undefined
+
 export class ReactiveEffect<T = any> {
     computed?: ComputedRefImpl<T>
-    constructor(public fn: () => T, public scheduler: EffectScheduler | null) {
-        this.fn = fn;
-    }
 
-    /**
-     * 运行响应式副作用函数
-     */
+    constructor(
+        public fn: () => T,
+        public scheduler: EffectScheduler | null = null
+    ) { }
+
     run() {
-        activeEffect = this;
-        this.fn();
+        activeEffect = this
+        return this.fn()
     }
+
+    stop() { }
 }
 
-
-
-/**
- * 追踪响应式对象的依赖项
- * @param target - 响应式对象
- * @param key - 属性键
- */
-export function track(target: object, key: unknown) {
-    if (!activeEffect) {
-        return;
-    }
-    let depsMap = targetMap.get(target);
-    if (!depsMap) {
-        targetMap.set(target, (depsMap = new Map()));
-    }
-
-    let dep = depsMap.get(key);
-    if (!dep) {
-        depsMap.set(key, (dep = createDep()));
-    }
-
-    dep.add(activeEffect);
+export interface ReactiveEffectOptions {
+    lazy?: boolean
+    scheduler?: EffectScheduler
 }
 
-/**
- * 触发响应式对象的更新
- * @param target - 响应式对象
- * @param key - 属性键
- * @param value - 新值
- */
-export function trigger(target: object, key: unknown, value: any) {
-    const depsMap = targetMap.get(target);
-    if (!depsMap) {
-        return;
+export function effect<T = any>(fn: () => T, options?: ReactiveEffectOptions) {
+    const _effect = new ReactiveEffect(fn)
+    if (options) {
+        extend(_effect, options)
     }
 
-    const dep: Dep | undefined = depsMap.get(key);
-    if (!dep) {
-        return;
+    if (!options || !options.lazy) {
+        _effect.run()
     }
-
-    //触发依赖更新
-    dep.forEach((effect: ReactiveEffect) => {
-        if (effect) {
-            if (effect.scheduler) {
-                effect.scheduler();
-            } else {
-                effect.run();
-            }
-        }
-    });
-
 }
-
-
-
