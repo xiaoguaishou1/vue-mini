@@ -1,29 +1,50 @@
-/*
- * @Author: 阿喜
- * @Date: 2023-07-31 21:09:16
- * @LastEditors: 阿喜
- * @LastEditTime: 2023-08-02 21:46:02
- * @FilePath: \vue-mini\packages\shared\src\index.ts
- * @Description: 
- * 
- */
+export * from './toDisplayString'
+
 /**
  * 判断是否为一个数组
  */
 export const isArray = Array.isArray
-export const extend = Object.assign;
-export const hasChanged = (value: any, oldValue: any): boolean =>
-    !Object.is(value, oldValue)
+
+/**
+ * 判断是否为一个对象
+ */
 export const isObject = (val: unknown) =>
-    val !== null && typeof val === 'object'
+	val !== null && typeof val === 'object'
 
+/**
+ * 对比两个数据是否发生了改变
+ */
+export const hasChanged = (value: any, oldValue: any): boolean =>
+	!Object.is(value, oldValue)
 
+/**
+ * 是否为一个 function
+ */
+export const isFunction = (val: unknown): val is Function =>
+	typeof val === 'function'
 
-export const isFunction = (val: unknown): val is Function => {
-    return typeof val === 'function'
-}
+/**
+ * Object.assign
+ */
+export const extend = Object.assign
 
+/**
+ * 只读的空对象
+ */
+export const EMPTY_OBJ: { readonly [key: string]: any } = {}
 
-export const isString = (val: unknown): val is String => {
-    return typeof val === 'string'
-}
+/**
+ * 判断是否为一个 string
+ */
+export const isString = (val: unknown): val is string => typeof val === 'string'
+
+const onRE = /^on[^a-z]/
+/**
+ * 是否 on 开头
+ */
+export const isOn = (key: string) => onRE.test(key)
+
+/**
+ * 永远返回 false
+ */
+export const NO = () => false
