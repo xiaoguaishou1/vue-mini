@@ -8,7 +8,7 @@
  * 
  */
 import { isOn } from "@vue/shared";
-import { patchClass } from './modules/class'
+import { patchClass } from '../modules/class'
 export const patchProp = (el: Element, key, prevValue, nextValue) => {
     // console.log(el, key, prevValue, nextValue)
     if (key === 'textContent') {

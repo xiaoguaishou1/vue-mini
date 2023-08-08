@@ -2,12 +2,12 @@
  * @Author: 阿喜
  * @Date: 2023-08-07 19:55:33
  * @LastEditors: 阿喜
- * @LastEditTime: 2023-08-07 20:04:46
- * @FilePath: \vue-mini\packages\shared\src\normalizeProp.ts
+ * @LastEditTime: 2023-08-08 22:21:45
+ * @FilePath: \vue-mini\packages\runtime-core\src\normalizeProp.ts
  * @Description: 
  * 
  */
-import { isArray, isObject, isString } from '.'
+import { isArray, isObject, isString } from 'packages/shared/src/index'
 
 
 export function normalizeClass(value: unknown): string {

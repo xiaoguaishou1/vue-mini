@@ -33,11 +33,11 @@ export interface RendererOptions {
 
 
 export function createRenderer(options: RendererOptions) {
-  return baseCreateRenderer(options)
+  return baseCreateRender(options)
 }
 
 
-function baseCreateRenderer(options: RendererOptions): any {
+function baseCreateRender(options: RendererOptions): any {
 
   const {
     insert: hostInsert,
