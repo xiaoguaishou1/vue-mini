@@ -23,7 +23,10 @@ export function track(target: object, key: unknown) {
 
 
 export function trackEffects(dep: Dep) {
-    dep.add(activeEffect!)
+    if (activeEffect) {
+        dep.add(activeEffect)
+        activeEffect.deps.push(dep)
+    }
 }
 
 
@@ -63,10 +66,22 @@ export function triggerEffect(effect: ReactiveEffect) {
     }
 }
 
+function cleanupEffect(effect: ReactiveEffect) {
+    const { deps } = effect
+    if (deps.length) {
+        for (let i = 0; i < deps.length; i++) {
+            deps[i].delete(effect)
+        }
+        deps.length = 0
+    }
+}
+
 export let activeEffect: ReactiveEffect | undefined
 
 export class ReactiveEffect<T = any> {
     computed?: ComputedRefImpl<T>
+    deps: Dep[] = []
+    active = true
 
     constructor(
         public fn: () => T,
@@ -78,7 +93,12 @@ export class ReactiveEffect<T = any> {
         return this.fn()
     }
 
-    stop() { }
+    stop() {
+        if (this.active) {
+            cleanupEffect(this)
+            this.active = false
+        }
+    }
 }
 
 export interface ReactiveEffectOptions {
