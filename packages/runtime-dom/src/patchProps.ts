@@ -7,17 +7,28 @@
  * @Description: 
  * 
  */
-import { isOn } from "@vue/shared";
+import { isOn } from "@vue/shared"
+import { patchAttr } from '../modules/attrs'
 import { patchClass } from '../modules/class'
-export const patchProp = (el: Element, key, prevValue, nextValue) => {
-    // console.log(el, key, prevValue, nextValue)
-    if (key === 'textContent') {
-        el.textContent = nextValue;
+import { patchDOMProp } from '../modules/props'
+import { patchStyle } from '../modules/style'
+import { patchEvent } from '../modules/event'
+
+export const patchProp = (
+    el: Element,
+    key: string,
+    prevValue: any,
+    nextValue: any
+) => {
+    if (key === 'class') {
+        patchClass(el, nextValue)
     } else if (key === 'style') {
-        patchClass(el, nextValue);
+        patchStyle(el, prevValue, nextValue)
     } else if (isOn(key)) {
-
+        patchEvent(el, key, prevValue, nextValue)
+    } else if (key in el) {
+        patchDOMProp(el, key, nextValue)
     } else {
-
+        patchAttr(el, key, nextValue)
     }
 }
